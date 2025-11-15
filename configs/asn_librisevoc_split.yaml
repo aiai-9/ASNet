@@ -1,0 +1,209 @@
+# audioShieldNet/asnet_6/configs/asn_librisevoc_secure.yaml
+
+# ============================================================
+# AudioShieldNet-ASNet on LibriSeVoc
+# Stable security curriculum: SAM → Energy → OOD → Adv (gentle)
+# with stronger focus on clean EER
+# ============================================================
+
+ckpt_dir: lsv_3
+
+log:
+  outdir: audioShieldNet/asnet_6/experiments/${ckpt_dir}
+  wandb:
+    enable: true
+    project: audioshieldnet
+    entity: xxxxxxxxxxxx
+    run_name: ${ckpt_dir}
+
+# -------------------------------
+# DATA
+# -------------------------------
+data:
+  name: librisevoc_split
+  sr: 16000
+  n_fft: 1024
+  hop: 256
+  n_mels: 80
+  max_secs: 6.0
+
+  root_dir: /scratch/xxxxx/projects/deepfake/dataset/audio/LibriSeVoc
+  auto_prepare: false
+  train_csv: /scratch/xxxxx/projects/deepfake/dataset/audio/LibriSeVoc/combined/LibriSeVoc_train.csv
+  val_csv:   /scratch/xxxxx/projects/deepfake/dataset/audio/LibriSeVoc/combined/LibriSeVoc_val.csv
+  test_csv:  /scratch/xxxxx/projects/deepfake/dataset/audio/LibriSeVoc/combined/LibriSeVoc_test.csv
+
+  # ⇨ use balanced batches to fight huge class imbalance
+  sampler: balanced_batch
+
+# -------------------------------
+# MODEL
+# -------------------------------
+model:
+  name: asnnet_secdual          # TCN + AttnPool encoder
+  n_mels: 80
+  emb: 195
+  hidden_ch: 192
+  dropout: 0.2
+  heads: 1
+  n_vocoders: 8
+  grl_lambda: 0.2
+  tcn_layers: 4
+  tcn_dilations: [1, 2, 4, 8]
+  cons_weight: 0.05             # ASNet branch cap
+
+# -------------------------------
+# TRAINING
+# -------------------------------
+train:
+  epochs: 100
+  batch_size: 128
+  lr: 6.0e-4
+  weight_decay: 1.0e-4
+  grad_clip: 5.0
+  seed: 42
+  amp: false
+  num_workers: 16
+  prefetch_factor: 8
+  persistent_workers: true
+  pin_memory: true
+  steps_per_epoch: null
+
+  loss:
+    name: balanced_bce
+    use_effective_num: true
+    effective_beta: 0.9999
+
+    # longer focal warmup → more focus on borderline samples early
+    warmup:
+      enable: true
+      epochs: 10
+      first: focal
+
+    focal:
+      gamma: 2.5          # slightly stronger hard-example focus
+      alpha: 0.30         # a bit more weight on minority class
+
+    asl:
+      gamma_pos: 0.0
+      gamma_neg: 4.0
+      clip: 0.05
+
+    logit_adjusted:
+      tau: 1.0
+
+  # Progressive curriculum (delayed + gentler for EER)
+  stability_warmup_frac: 0.20
+  sam_start_frac:        0.50   # SAM mid-training
+  energy_start_frac:     0.60
+  ood_start_frac:        0.70
+  adv_start_frac:        0.80   # adversarial only in last 20% of epochs
+  adv_warmup_epochs: 0
+
+  lr_drop_on_switch: 0.30
+  best_metric: eer
+  best_mode: min
+  save_every_epochs: 1
+  keep_top_k: 3
+
+# -------------------------------
+# OPTIMIZER / SAM / SWA
+# -------------------------------
+optim:
+  use_sam: true
+  sam_rho: 0.002                 # softer SAM
+  scheduler:
+    name: cosine
+    warmup_steps: 800
+    min_lr: 1.0e-6
+  swa:
+    enable: true
+    start_epoch: 0.85
+
+ema:
+  use_ema: true
+  decay: 0.099
+
+# -------------------------------
+# AUGMENTATIONS
+# -------------------------------
+# gentler than before: less distortion, keeps clean EER strong
+augs:
+  use_specaug: true
+  time_mask_T: 24
+  time_mask_p: 0.20
+  freq_mask_F: 6
+  freq_mask_p: 0.20
+  add_noise_p: 0.15
+  snr_db: [15, 24]
+
+# -------------------------------
+# ASNET loss branch
+# -------------------------------
+asn:
+  use_trainer_asn: true
+  win_ms: [80, 160]
+  hop_ms: 40
+  margin: 0.2
+  spoof_weight: 0.5
+  tv_weight: 0.0
+  mel_sample: 16
+  max_time_windows: 64
+  cons_weight: 0.05  # you can try 0.03 if you suspect over-regularization
+
+# -------------------------------
+# SECURITY & ROBUSTNESS
+# -------------------------------
+security:
+  # ---- Adversarial defense (gentler) ----
+  use_adv: true
+  adv_steps: 1                 # from 2 → lighter attack
+  adv_eps: [0.0005, 0.001]     # drop the largest eps
+  adv_alpha: 0.00015
+  adv_every: 8
+  trades_weight: 1.0           # small TRADES term → robustness without killing EER
+
+  # ---- Energy regularization gate ----
+  energy_reg: true
+  energy_weight: 5.0e-6        # reduced from 1.0e-5
+
+  energy:
+    tau_id: -0.10
+    lambda_id: 5.0e-6          # reduced from 1.0e-5
+    warmup_epochs: 10
+
+  # ---- Gentle OOD push (weaker) ----
+  ood_push:
+    use: true
+    curriculum: true
+    types: [mp3, bandstop, lowpass, reverb, bitrate16k]
+    tau_target: 0.10
+    weight: 2.5e-6             # reduced from 5.0e-6
+
+  # ---- Energy triage & conformal abstention ----
+  triage:
+    T: 1.0
+    tau_susp_energy: -0.25
+    use_conformal: true
+    target_coverage: 0.90
+    auto_tau_eval: true
+    tau_override: null
+
+# -------------------------------
+# EVALUATION SETTINGS
+# -------------------------------
+eval:
+  use_test: false              # evaluate on VAL; set true for TEST if needed
+  threshold: 0.50
+  use_config_threshold: false
+  csv_threshold_source: f1     # use F1-optimal thr for CSV
+
+  # force_invert: false
+  attack: "fgsm"
+  save_pred_csv: true
+  verbose: true
+  use_temperature_scaling: true
+  reliability_bins: 15
+
+  # ⇨ evaluate best-EER checkpoint (you can also try "topk3" if your eval supports ensembling)
+  ckpt_choose: best
