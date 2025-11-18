@@ -1,0 +1,236 @@
+# audioShieldNet/asnet_6/configs/asn_for_split.yaml
+# ============================================================
+# ASNet on FOR (ForgeryNet / FakeOrReal)
+# Deterministic loaders + optional auto-prepare + balanced batches
+# ============================================================
+
+ckpt_dir: for_cmra_energy_1
+
+log:
+  outdir: audioShieldNet/asnet_6/experiments/${ckpt_dir}
+  wandb:
+    enable: true
+    project: audioshieldnet
+    entity: xxxxxxxxxxxx
+    run_name: ${ckpt_dir}
+
+# -------------------------------
+# DATA
+# -------------------------------
+data:
+  name: for
+  sr: 16000
+  n_fft: 1024
+  hop: 256
+  n_mels: 80
+  max_secs: 6.0
+
+  root_dir: /scratch/xxxxx/projects/deepfake/dataset/audio/FOR
+  metadata_dir: /scratch/xxxxx/projects/deepfake/dataset/audio/FOR/metadata
+
+  # Choose which subsets/variants to include (or use "all")
+  variants: [for-norm, for-original, for-rerec, for-2sec]
+
+  # If CSVs already exist, keep auto_prepare: false and point to them:
+  auto_prepare: false
+  train_csv: /scratch/xxxxx/projects/deepfake/dataset/audio/FOR/metadata/combined/FOR_for-norm-for-original-for-rerec-for-2sec_train.csv
+  val_csv:   /scratch/xxxxx/projects/deepfake/dataset/audio/FOR/metadata/combined/FOR_for-norm-for-original-for-rerec-for-2sec_val.csv
+  test_csv:  /scratch/xxxxx/projects/deepfake/dataset/audio/FOR/metadata/combined/FOR_for-norm-for-original-for-rerec-for-2sec_test.csv
+
+  # Or, to build CSVs dynamically from metadata:
+  # auto_prepare: true
+
+  # Sampling strategy: "uniform" | "weighted" | "balanced_batch"
+  sampler: uniform
+  # balanced_batch:
+  #   real_per_batch: 128
+  #   fake_per_batch: 128
+
+  # Optional CAL from VAL (stratified)
+  # cal_from_val_frac: 0.20
+  # cal_exclude_from_val: true
+
+# -------------------------------
+# MODEL
+# -------------------------------
+model:
+  name: asnnet_secdual          # TCN + AttnPool dual encoders
+  n_mels: 80
+  emb: 192                      # a touch more capacity than WaveFake
+  hidden_ch: 192
+  dropout: 0.18
+  heads: 2                      # dual heads often help FOR variety
+  n_vocoders: 8
+  grl_lambda: 0.2
+  tcn_layers: 4
+  tcn_dilations: [1, 2, 4, 8]
+  return_aux: true
+
+# -------------------------------
+# TRAINING
+# -------------------------------
+train:
+  epochs: 100
+  batch_size: 256
+  lr: 2.5e-4
+  weight_decay: 1.0e-4
+  grad_clip: 5.0
+  seed: 42
+  amp: false
+  num_workers: 16
+  prefetch_factor: 8
+  persistent_workers: true
+  pin_memory: true
+  steps_per_epoch: null
+
+  loss:
+    name: balanced_bce
+    use_effective_num: true
+    effective_beta: 0.9999
+
+    warmup:
+      enable: true
+      epochs: 6
+      first: focal
+
+    focal:
+      gamma: 2.2
+      alpha: 0.28
+
+    asl:
+      gamma_pos: 0.0
+      gamma_neg: 4.0
+      clip: 0.05
+
+    logit_adjusted:
+      tau: 1.0
+
+  # Security-aware curriculum (FOR has broader channel/recording diversity)
+  stability_warmup_frac: 0.20
+  sam_start_frac:        0.45
+  energy_start_frac:     0.55
+  ood_start_frac:        0.65
+  adv_start_frac:        0.75
+  adv_warmup_epochs: 0
+
+  lr_drop_on_switch: 0.30
+  best_metric: eer
+  best_mode: min
+  save_every_epochs: 1
+  keep_top_k: 3
+
+# -------------------------------
+# OPTIMIZER / SAM / SWA
+# -------------------------------
+optim:
+  use_sam: true
+  sam_rho: 0.006                 # slightly stronger flattening for FOR
+  scheduler:
+    name: cosine
+    warmup_steps: 900
+    min_lr: 1.0e-6
+  swa:
+    enable: true
+    start_frac: 0.82
+    update_bn_on_finish: true
+
+ema:
+  use_ema: true
+  decay: 0.999
+
+# -------------------------------
+# AUGMENTATIONS
+# -------------------------------
+augs:
+  use_specaug: true
+  time_mask_T: 36
+  time_mask_p: 0.35
+  freq_mask_F: 8
+  freq_mask_p: 0.35
+  add_noise_p: 0.25
+  snr_db: [12, 24]
+
+# -------------------------------
+# ASNET loss branch (CMRA + contrast)
+# -------------------------------
+asn:
+  use_trainer_asn: true
+  win_ms: [80, 160]
+  hop_ms: 40
+  margin: 0.2
+  spoof_weight: 0.5
+  tv_weight: 0.0
+  mel_sample: 16
+  max_time_windows: 64
+
+  # Coherence branch
+  cons_weight: 0.055
+
+  # === CMRA (slightly stronger than WaveFake; weaker than LSV) ===
+  cmra_weight: 0.05
+  cmra_margin: 0.65
+  cmra_band: [0.16, 0.46]
+  cmra_token_weight: 0.22
+
+  # Dual-view InfoNCE
+  contrast_weight: 0.011
+  contrast_tau: 0.068
+
+  # Corridor shape
+  cmra:
+    s_align: 0.25
+    s_max:   0.55
+    w_align: 1.0
+    w_repel: 0.6
+
+# -------------------------------
+# SECURITY & ROBUSTNESS
+# -------------------------------
+security:
+  use_adv: true
+  adv_steps: 2
+  adv_eps: [0.0005, 0.001, 0.0015, 0.002]
+  adv_alpha: 0.00025
+  adv_every: 10
+  trades_weight: 0.05            # slight TRADES helps FOR generalization
+
+  # Energy regularization (ID anchor)
+  energy_reg: true
+  energy_weight: 8.0e-6
+
+  energy:
+    tau_id: -0.10
+    lambda_id: 8.0e-6
+    warmup_epochs: 10
+
+  # Gentle OOD push (FOR channels/rerec)
+  ood_push:
+    use: true
+    curriculum: true
+    types: [mp3, bandstop, lowpass, reverb, bitrate16k]
+    tau_target: 0.10
+    weight: 5.0e-6
+
+  # Energy triage & conformal abstention (eval)
+  triage:
+    T: 1.0
+    tau_susp_energy: -0.25
+    use_conformal: true
+    target_coverage: 0.90
+    auto_tau_eval: true
+    tau_override: null
+
+# -------------------------------
+# EVALUATION
+# -------------------------------
+eval:
+  use_test: false
+  threshold: 0.50
+  use_config_threshold: false
+  csv_threshold_source: f1
+  attack: "fgsm"
+  save_pred_csv: true
+  verbose: true
+  use_temperature_scaling: true
+  reliability_bins: 15
+  ckpt_choose: best

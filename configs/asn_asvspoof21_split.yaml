@@ -1,0 +1,229 @@
+# ============================================================
+# AudioShieldNet-ASNet on ASVspoof2021 (LA)
+# Stabilized: strict balanced batching + late/soft curriculum
+# Goal: push EER toward 0.01 without late-epoch collapse
+# ============================================================
+
+ckpt_dir: asv21_2
+
+log:
+  outdir: audioShieldNet/asnet_6/experiments/${ckpt_dir}
+  wandb:
+    enable: true
+    project: audioshieldnet
+    entity: xxxxx
+    run_name: ${ckpt_dir}
+
+# -------------------------------
+# DATA
+# -------------------------------
+data:
+  name: asvspoof21_split
+  sr: 16000
+  n_fft: 1024
+  hop: 256
+  n_mels: 80
+  max_secs: 6.0
+
+  root_dir: /scratch/xxxxx/projects/deepfake/dataset/audio/ASVspoof2021
+  train_csv: /scratch/xxxxx/projects/deepfake/dataset/audio/ASVspoof2021/combined/ASVspoof21_train.csv
+  val_csv:   /scratch/xxxxx/projects/deepfake/dataset/audio/ASVspoof2021/combined/ASVspoof21_val.csv
+  test_csv:  /scratch/xxxxx/projects/deepfake/dataset/audio/ASVspoof2021/combined/ASVspoof21_test.csv
+
+  # MUST: balanced batches on extreme 90/10 skew
+  sampler: balanced_batch        # requires small patch below
+  balanced_batch:
+    real_per_batch: 128
+    fake_per_batch: 128
+
+  # Optional: stratified cal from VAL (NOT from TEST)
+  cal_from_val_frac: 0.20
+  cal_exclude_from_val: true
+
+# -------------------------------
+# MODEL
+# -------------------------------
+model:
+  name: asnnet_secdual
+  n_mels: 80
+  emb: 256
+  hidden_ch: 256
+  dropout: 0.15
+  heads: 2
+  n_vocoders: 8
+  grl_lambda: 0.2
+  tcn_layers: 4
+  tcn_dilations: [1, 2, 4, 8]
+  return_aux: true
+
+# -------------------------------
+# TRAINING
+# -------------------------------
+train:
+  epochs: 100
+  batch_size: 256
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  grad_clip: 5.0
+  seed: 42
+  amp: false
+  num_workers: 16
+  prefetch_factor: 8
+  persistent_workers: true
+  pin_memory: true
+  steps_per_epoch: null
+
+  loss:
+    name: balanced_bce
+    use_effective_num: true
+    effective_beta: 0.9999
+    warmup:
+      enable: true
+      epochs: 8
+      first: focal
+    focal:
+      gamma: 2.5
+      alpha: 0.30
+    asl:
+      gamma_pos: 0.0
+      gamma_neg: 4.0
+      clip: 0.05
+    logit_adjusted:
+      tau: 1.0
+
+  # Security-aware curriculum (later + gentler)
+  stability_warmup_frac: 0.20
+  sam_start_frac:        0.50
+  energy_start_frac:     0.70
+  ood_start_frac:        0.80
+  adv_start_frac:        0.90     # was 0.70 — push very late on ASV21
+  adv_warmup_epochs: 0
+
+  # Keep LR smooth; don't perturb at switches
+  lr_drop_on_switch: 0.00
+  best_metric: eer
+  best_mode: min
+  save_every_epochs: 1
+  keep_top_k: 3
+
+# -------------------------------
+# OPTIMIZER / SAM / SWA
+# -------------------------------
+optim:
+  use_sam: true
+  sam_rho: 0.010                 # moderate; 0.002 was too weak, 0.03 too stiff here
+  scheduler:
+    name: cosine
+    warmup_steps: 800
+    min_lr: 1.0e-6
+  swa:
+    enable: true
+    start_frac: 0.80
+    update_bn_on_finish: true
+
+ema:
+  use_ema: true
+  decay: 0.999
+
+# -------------------------------
+# AUGMENTATIONS (mild; keep LA distribution)
+# -------------------------------
+augs:
+  use_specaug: true
+  time_mask_T: 20
+  time_mask_p: 0.15
+  freq_mask_F: 5
+  freq_mask_p: 0.15
+  add_noise_p: 0.10
+  snr_db: [18, 24]
+
+# -------------------------------
+# ASNET branch (coherence + CMRA + InfoNCE)
+# -------------------------------
+asn:
+  use_trainer_asn: true
+  win_ms: [80, 160]
+  hop_ms: 40
+  margin: 0.2
+  spoof_weight: 0.5
+  tv_weight: 0.0
+  mel_sample: 16
+  max_time_windows: 64
+
+  cons_weight: 0.06
+
+  # CMRA corridor (Option B)
+  cmra_weight: 0.05
+  cmra_margin: 0.65
+  cmra_band: [0.18, 0.45]
+  cmra_token_weight: 0.20
+
+  # Dual-view InfoNCE
+  contrast_weight: 0.010
+  contrast_tau: 0.070
+
+  cmra:
+    s_align: 0.25
+    s_max:   0.55
+    w_align: 1.0
+    w_repel: 0.6
+
+# -------------------------------
+# SECURITY & ROBUSTNESS
+# -------------------------------
+security:
+  # Adversarial branch — much gentler & very late
+  use_adv: true
+  adv_steps: 1
+  adv_eps: [0.0004]
+  adv_alpha: 0.0002
+  adv_every: 12
+  trades_weight: 0.05
+
+  # Energy regularization (anchor late)
+  energy_reg: true
+  energy_weight: 2.0e-6
+
+  energy:
+    tau_id: -0.10
+    lambda_id: 5.0e-7
+    warmup_epochs: 14           # don't anchor too early
+
+  # Energy gate (train only; clamped in code)
+  energy_gate:
+    w_g: 1.0
+    b_g: 0.0
+    min_g: 0.4
+    max_g: 1.0
+
+  # OOD push — ultra light
+  ood_push:
+    use: true
+    curriculum: true
+    types: [mp3, lowpass, reverb]
+    tau_target: 0.10
+    weight: 5.0e-7
+
+  # Evaluation triage (eval only)
+  triage:
+    T: 1.0
+    tau_susp_energy: -0.25
+    use_conformal: true
+    target_coverage: 0.90
+    auto_tau_eval: true
+    tau_override: null
+
+# -------------------------------
+# EVALUATION
+# -------------------------------
+eval:
+  use_test: false
+  threshold: 0.50
+  use_config_threshold: false
+  csv_threshold_source: f1
+  attack: "fgsm"
+  save_pred_csv: true
+  verbose: true
+  use_temperature_scaling: true
+  reliability_bins: 15
+  ckpt_choose: best
