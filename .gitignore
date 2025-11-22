@@ -10,6 +10,8 @@ __pycache__/
 # Ignore local helper scripts / backups
 git_script/
 sanitize_backups*/
+audioshieldnet/data/prepare_data*/
+
 
 # Ignore specific unwanted files (add here)
 # e.g., debug.py or test_tmp.py
@@ -94,6 +96,4 @@ desktop.ini
 !*.sh
 
 
-# git rm --cached "audioshieldnet/engine/trainer copy.py"
-# git commit -m "remove unwanted trainer copy"
-# git push
+
