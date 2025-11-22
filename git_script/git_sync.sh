@@ -20,6 +20,10 @@ fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 echo "👉 Current branch: $BRANCH"
+
+# ✅ NEW: show remote URL for clarity
+REMOTE_URL="$(git remote get-url origin 2>/dev/null || echo 'no origin remote')"
+echo "🌐 Remote: $REMOTE_URL"
 echo
 
 # Commit message:
@@ -127,9 +131,6 @@ echo "🎉 git_sync.sh finished successfully."
 # aiai-9
 
 # ======================================== Make script executable ========================================
-
 # chmod +x git_script/git_sync.sh
-
 # ./git_script/git_sync.sh "my commit message"
-
 # ./git_script/git_sync.sh "fix: calibration bug in ASNet"
