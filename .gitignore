@@ -1,0 +1,92 @@
+# ------------------------
+# Core Python ignores
+# ------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+*.egg-info/
+*.egg
+dist/
+build/
+
+# ------------------------
+# ML / Deep Learning files to ignore
+# ------------------------
+
+# Trained weights, checkpoints, logs
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+*.npz
+
+# WandB, TensorBoard, MLFlow logs
+wandb/
+tensorboard/
+runs/
+mlruns/
+
+# ------------------------
+# Data + large assets
+# ------------------------
+data/
+datasets/
+raw/
+processed/
+*.wav
+*.mp3
+*.flac
+*.opus
+*.ogg
+*.npy
+*.npz
+
+# ------------------------
+# Jupyter / notebooks
+# ------------------------
+*.ipynb
+.ipynb_checkpoints/
+
+# ------------------------
+# OS / Editor junk
+# ------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyCharm / VSCode
+.idea/
+.vscode/
+*.swp
+
+# ------------------------
+# Shell & temp files
+# ------------------------
+*.log
+*.tmp
+*.bak
+*.out
+
+# ------------------------
+# Allow only these file types:
+# (PY, YAML, SH, and folders automatically get included)
+# ------------------------
+
+# Whitelist rules (negative patterns)
+!*.py
+!*.yaml
+!*.yml
+!*.sh
+
+# Allow directories
+!*/
+
