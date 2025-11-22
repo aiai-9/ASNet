@@ -7,8 +7,20 @@ __pycache__/
 *.pyd
 *.so
 
-# Virtual environments
+# Ignore local helper scripts / backups
 git_script/
+sanitize_backups*/
+
+# Ignore specific unwanted files (add here)
+# e.g., debug.py or test_tmp.py
+# debug.py
+# test_tmp.py
+
+# Ignore specific unwanted folders (add here)
+# old_versions/
+# audioshieldnet/unused_modules/
+
+# Virtual environments
 venv/
 env/
 .venv/
@@ -19,10 +31,8 @@ dist/
 build/
 
 # ------------------------
-# ML / Deep Learning files to ignore
+# ML / Deep Learning files
 # ------------------------
-
-# Trained weights, checkpoints, logs
 *.ckpt
 *.pt
 *.pth
@@ -30,7 +40,6 @@ build/
 *.onnx
 *.npz
 
-# WandB, TensorBoard, MLFlow logs
 wandb/
 tensorboard/
 runs/
@@ -64,7 +73,6 @@ processed/
 Thumbs.db
 desktop.ini
 
-# PyCharm / VSCode
 .idea/
 .vscode/
 *.swp
@@ -78,16 +86,14 @@ desktop.ini
 *.out
 
 # ------------------------
-# Allow only these file types:
-# (PY, YAML, SH, and folders automatically get included)
+# Allow only these file types to be tracked
 # ------------------------
-
-# Whitelist rules (negative patterns)
 !*.py
 !*.yaml
 !*.yml
 !*.sh
 
-# Allow directories
-!*/
 
+# git rm --cached "audioshieldnet/engine/trainer copy.py"
+# git commit -m "remove unwanted trainer copy"
+# git push
