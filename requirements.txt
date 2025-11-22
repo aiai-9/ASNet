@@ -1,0 +1,37 @@
+tensorflow[and-cuda]
+librosa
+# pip install "numpy<=2.2" --upgrade --force-reinstall
+numpy<=2.2
+matplotlib
+seaborn
+graphviz
+pydot
+kagglehub
+datasets
+soundfile
+# conda install -c conda-forge ffmpeg libsndfile sox
+torchinfo
+opencv-python
+albumentations
+torchvision
+scikit-image
+# dlib
+tqdm
+pandas
+PyYAML
+transformers
+segmentation-models-pytorch
+timm
+wandb
+python-dotenv
+Flask
+Werkzeug
+torch
+torchaudio
+numpy
+pandas
+gunicorn
+accelerate
+openpyxl
+
+
