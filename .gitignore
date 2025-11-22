@@ -7,6 +7,8 @@ sanitize_backups*/
 # audioshieldnet/data/
 
 #  INCLUDE this file
+!audioshieldnet/
+!audioshieldnet/data/
 !audioshieldnet/data/librisevoc_split.py
 
 
