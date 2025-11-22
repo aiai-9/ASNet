@@ -11,6 +11,7 @@ __pycache__/
 git_script/
 sanitize_backups*/
 audioshieldnet/data/prepare_data*/
+audioshieldnet/data/
 
 
 # Ignore specific unwanted files (add here)
