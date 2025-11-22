@@ -124,7 +124,7 @@ fi
 echo
 echo "🎉 git_sync.sh finished successfully."
 
-aiai-9
+# aiai-9
 
 # ======================================== Make script executable ========================================
 
