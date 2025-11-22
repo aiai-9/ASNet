@@ -3,8 +3,8 @@
 # Ignore local helper scripts / backups
 git_script/
 sanitize_backups*/
-audioshieldnet/data/prepare_data*/
-audioshieldnet/data/
+# audioshieldnet/data/prepare_data*/
+# audioshieldnet/data/
 
 #  INCLUDE this file
 !audioshieldnet/data/librisevoc_split.py
