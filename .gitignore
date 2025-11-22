@@ -1,3 +1,16 @@
+
+
+# Ignore local helper scripts / backups
+git_script/
+sanitize_backups*/
+audioshieldnet/data/prepare_data*/
+audioshieldnet/data/
+
+#  INCLUDE this file
+!audioshieldnet/data/librisevoc_split.py
+
+
+
 # ------------------------
 # Core Python ignores
 # ------------------------
@@ -6,14 +19,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.so
-
-# Ignore local helper scripts / backups
-git_script/
-sanitize_backups*/
-audioshieldnet/data/prepare_data*/
-audioshieldnet/data/
-
-
 # Ignore specific unwanted files (add here)
 # e.g., debug.py or test_tmp.py
 # debug.py
