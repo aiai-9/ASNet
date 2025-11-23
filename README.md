@@ -130,7 +130,7 @@ We provide pretrained ASNet weights used in all experiments.
 ### **ASNet (LibriSeVoc-trained) — Full Security Curriculum**
 
 📥 **Download:**
-👉 **Google Drive**: [One Drive](https://yuad-my.sharepoint.com/:u:/g/personal/skumar4_mail_yu_edu/ERx0l4OSzWlBn1brGbFLrigB5eQSbaoFTy9kG0EfioSX6Q?e=jWO2oe)
+👉 **Google Drive**: [Google Drive](https://drive.google.com/file/d/1PRKx6yB410cxOxkkHgJhRZUqkdsEm1q5/view?usp=sharing)
 
 # 📦 Installation
 
