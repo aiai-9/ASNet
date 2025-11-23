@@ -3,10 +3,10 @@
 # 🛡️ AudioShieldNet (ASNet)
 
 ### **A Defense-in-Depth Framework for Secure and Trustworthy Audio Deepfake Detection**
-<!-- 
+
 <p align="center">
-  <img src="figures/asnet.png" width="700"/>
-</p> -->
+  <img src="figures/asnet_model.png" width="700"/>
+</p>
 
 ---
 
