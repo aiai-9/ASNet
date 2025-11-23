@@ -1,3 +1,7 @@
+# 🛡️ **AudioShieldNet (ASNet)**
+
+### *A Defense-in-Depth Framework for Secure and Trustworthy Audio Deepfake Detection*
+
 ## 📘 Abstract
 
 Modern audio deepfake detectors remain brittle under unseen vocoders, codec distortions, and small adversarial perturbations.
