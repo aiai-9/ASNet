@@ -10,6 +10,7 @@ sanitize_backups*/
 !audioshieldnet/
 !audioshieldnet/data/
 !audioshieldnet/data/librisevoc_split.py
+!audioshieldnet/data/audioshield_dataset.py
 
 
 

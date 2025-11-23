@@ -186,3 +186,164 @@ ASNet/
 ├── requirements.txt
 └── README.md
 ```
+
+
+
+# 📦 **Datasets Used in ASNet**
+
+ASNet is evaluated across **five major audio deepfake corpora**, covering unseen vocoders, codec distortions, cross-domain speech synthesis, and diverse fake-generation pipelines.
+
+Below is the complete dataset list, official download URLs, and notes on how ASNet loads them.
+
+---
+
+## 🔹 **1. LibriSeVoc (LSV) — *Training Corpus***
+
+**Purpose:** Main training dataset (spectral + prosody).
+**Contains:** Human speech + vocoder-based synthetic speech.
+**Used For:**
+
+* Primary training
+* Seen-domain evaluation
+
+📥 **Download:**
+[https://github.com/libriSeVoc/libriSeVoc](https://github.com/libriSeVoc/libriSeVoc) (If unavailable: academic request required — common LSV splits follow the ASVspoof/LibriSpeech protocol)
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/librisevoc.py`
+`audioshieldnet/data/librisevoc_split.py`
+
+---
+
+## 🔹 **2. ASVspoof 2021 (Logical Access)**
+
+**Purpose:** Unseen vocoders + adversarial robustness testing
+**Contains:** Many VC/TTS systems unseen during training.
+
+📥 **Download:**
+[https://datashare.ed.ac.uk/handle/10283/3055](https://datashare.ed.ac.uk/handle/10283/3055) (ASVspoof19)
+[https://datashare.ed.ac.uk/handle/10283/3336](https://datashare.ed.ac.uk/handle/10283/3336) (ASVspoof21)
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/asvspoof21_split.py`
+`audioshieldnet/data/asvspoof.py`
+`audioshieldnet/data/loader_asvspoof.py`
+
+---
+
+## 🔹 **3. WaveFake**
+
+**Purpose:** Unseen diffusion/transformer TTS systems
+**Contains:** Multi-vocoder high-quality audio for robustness testing.
+
+📥 **Download:**
+[https://zenodo.org/record/5642694](https://zenodo.org/record/5642694)
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/wavefake.py`
+`audioshieldnet/data/wavefake_prepare.py`
+
+---
+
+## 🔹 **4. FakeAVCeleb**
+
+**Purpose:** Cross-modal (audio–visual) fake speaker dataset
+**Contains:** Celebrity spoofed audio & video.
+
+📥 **Download:**
+[https://github.com/Daniil-Sukhanov/FakeAVCeleb](https://github.com/Daniil-Sukhanov/FakeAVCeleb)
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/fakeOrReal.py` (general loader for real/fake pairs)
+
+---
+
+## 🔹 **5. CodecFake**
+
+**Purpose:** Evaluate robustness under **mp3, AAC, Opus**, and **telephony band-limit** distortions
+**Contains:** Real + fake processed through low-bitrate codecs.
+
+📥 **Download:**
+CodecFake is built using the **WaveFake / VCTK / ASVspoof** corpora by applying codecs:
+
+* mp3 @ 16kbps
+* mp3 @ 24kbps
+* AAC @ 32kbps
+* Opus @ 64kbps
+* Telephony band-limit (300–3400 Hz)
+
+We provide scripts to generate CodecFake locally.
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/codecfake.py`
+`audioshieldnet/data/codecfake_split.py`
+`audioshieldnet/data/codecfake_prepare.py`
+
+---
+
+## 🔹 **6. FakeOrReal (FoR)**
+
+**Purpose:** Auxiliary robustness dataset for cross-domain tests
+**Contains:** Human–AI pairs sampled from multiple real TTS systems.
+
+📥 **Download:**
+[https://zenodo.org/record/5642694](https://zenodo.org/record/5642694) (merged with WaveFake in our pipeline)
+
+📂 **Loader in ASNet:**
+`audioshieldnet/data/fakeOrReal.py`
+`audioshieldnet/data/for_prepare.py`
+
+---
+
+# 📁 Dataset Preparation Scripts
+
+ASNet provides **full preparation pipelines** in:
+
+```
+audioshieldnet/data/prepare_data/
+```
+
+Scripts include:
+
+```
+asvspoof21_prepare.py
+librisevoc_prepare.py
+wavefake_prepare.py
+codecfake_prepare.py
+for_prepare.py
+prepare_run.sh
+```
+
+To prepare all datasets:
+
+```bash
+bash audioshieldnet/data/prepare_data/prepare_run.sh
+```
+
+This script:
+
+* Normalizes sampling rate
+* Generates split lists
+* Produces final `.json` or `.csv` training indexes
+* Generates combined multi-dataset lists for evaluation
+
+---
+
+# 🔌 Example Config Snippet
+
+Your YAML config may point to datasets like this:
+
+```yaml
+dataset:
+  librisevoc_root: "/path/to/LibriSeVoc"
+  asvspoof21_root: "/path/to/ASVspoof2021"
+  wavefake_root: "/path/to/WaveFake"
+  codecfake_root: "/path/to/CodecFake"
+  fakeavceleb_root: "/path/to/FakeAVCeleb"
+  for_root: "/path/to/FakeOrReal"
+```
+
+---
+
+
+
