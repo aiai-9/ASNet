@@ -4,9 +4,9 @@
 
 ### **A Defense-in-Depth Framework for Secure and Trustworthy Audio Deepfake Detection**
 
-<p align="center">
+<!-- <p align="center">
   <img src="figures/asnet_model.png" />
-</p>
+</p> -->
 
 ---
 
@@ -64,7 +64,7 @@ Full architecture, curriculum, evaluations, and ablations are described in the a
 ## 🧱 Architecture Overview
 
 <p align="center">
-  <img src="figures/asnet_architecture.png" width="750"/>
+  <img src="figures/asnet_model.png" />
 </p>
 
 ASNet integrates:
