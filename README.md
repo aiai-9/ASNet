@@ -148,19 +148,19 @@ pip install -r requirements.txt
 ### Train
 
 ```bash
-python audioshieldnet/engine/trainer.py --config configs/asnet_base.yaml
+python audioshieldnet/scripts/train.py --config configs/asn_librisevoc_split.yaml
 ```
 
 ### Evaluate
 
 ```bash
-python audioshieldnet/engine/evaluator.py --config configs/asnet_base.yaml --checkpoint ckpts/asnet_best.pt
+python audioshieldnet/scripts/eval_security.py --config configs/asn_librisevoc_split.yaml --checkpoint ckpts/asnet_best.pt
 ```
 
 ### Security Benchmarks
 
 ```bash
-python audioshieldnet/security/attacks.py --config configs/asnet_base.yaml
+python audioshieldnet/security/attacks.py --config configs/asn_librisevoc_split.yaml
 ```
 
 ---
