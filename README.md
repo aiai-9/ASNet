@@ -52,7 +52,7 @@ ASNet achieves **state-of-the-art unseen-vocoder, codec-shift, and adversarial r
 
 
 <p align="center">
-  <img src="figures/asnet_typical_vs_ours.png" width="900"/>
+  <img src="figures/asnet_highlevel.png" width="900"/>
 </p>
 
 **Figure 1. Typical vs. Security-Aware ASNet.**
