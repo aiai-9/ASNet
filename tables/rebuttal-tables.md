@@ -73,7 +73,7 @@ All variants use the same single-pass inference procedure at test time; only the
 ---
 
 **Table R5. Does the residual blind spot arise specifically from using a logit-derived confidence signal?**  
-All variants use the same ASNet backbone, training budget, curriculum, and evaluation protocol. Only the signal used for robustness modulation and abstention is changed. Clean AUC is omitted because it changed only marginally and does not bear directly on the reviewer’s concern.
+All variants use the same ASNet backbone, training budget, curriculum, and evaluation protocol. Only the signal used for robustness modulation and abstention is changed.
 
 | Confidence / control signal | Signal type | Rob. AUC ↑ | OOD-AUROC ↑ | ECE ↓ | Misclassified caught by abstention ↑ | Residual blind spot ↓ | AUC_kept @20% ↑ | EER_kept @20% ↓ |
 |:---|:---|---:|---:|---:|---:|---:|---:|---:|
