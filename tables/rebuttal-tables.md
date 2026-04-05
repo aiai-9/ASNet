@@ -49,17 +49,6 @@
 
 ---
 
-**Table R4. Simplified ASNet variants on LibriSeVoc.**
-
-| Variant | What's Kept | What's Removed | Rob. AUC ↑ | OOD-AUROC ↑ | ECE ↓ |
-|:---|:---|:---|---:|---:|---:|
-| ASNet-Lite | 1 encoder + SAM + Adv | Prosody, CMRA, gated fusion, ECRM, OOD, Energy | 0.76 | 0.58 | 0.23 |
-| ASNet-Lite + Prosody† | 2 encoders (concat) + SAM + Adv | CMRA, gated fusion, ECRM, OOD, Energy | 0.81 | 0.60 | 0.21 |
-| ASNet-Mid | 2 encoders + concat + SAM + Adv + Energy | CMRA, gated fusion, ECRM | 0.84 | 0.64 | 0.17 |
-| Full ASNet | All | — | 0.90 | 0.71 | 0.12 |
-
----
-
 **Table R4. Complexity–performance trade-off of simplified ASNet variants.**  
 All variants use the same single-pass inference procedure at test time; only the training-time robustness components differ. Complexity is reported **relative to Full ASNet** (so **1.00× = same as Full ASNet**, and smaller values indicate lower cost).
 
