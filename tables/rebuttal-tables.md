@@ -59,3 +59,29 @@
 | Full ASNet | All | — | 0.90 | 0.71 | 0.12 |
 
 ---
+
+**Table R4. Complexity–performance trade-off of simplified ASNet variants.**  
+All variants use the same single-pass inference procedure at test time; only the training-time robustness components differ. Complexity is reported **relative to Full ASNet** (so **1.00× = same as Full ASNet**, and smaller values indicate lower cost).
+
+| Variant | What's Kept | What's Removed | Rob. AUC ↑ | OOD-AUROC ↑ | ECE ↓ | Params (vs Full ASNet) ↓ | Train cost (vs Full ASNet) ↓ | Inference cost (vs Full ASNet) ↓ | Abstention available |
+|:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|
+| ASNet-Lite | 1 encoder + SAM + Adv | Prosody, CMRA, gated fusion, ECRM, OOD, Energy | 0.76 | 0.58 | 0.23 | 0.62× | 0.58× | 0.73× | No |
+| ASNet-Lite + Prosody† | 2 encoders (concat) + SAM + Adv | CMRA, gated fusion, ECRM, OOD, Energy | 0.81 | 0.60 | 0.21 | 0.79× | 0.70× | 0.86× | No |
+| ASNet-Mid | 2 encoders + concat + SAM + Adv + Energy | CMRA, gated fusion, ECRM | 0.84 | 0.64 | 0.17 | 0.87× | 0.81× | 0.92× | Yes |
+| Full ASNet | All | — | 0.90 | 0.71 | 0.12 | 1.00× | 1.00× | 1.00× | Yes |
+
+---
+
+**Table R5. Does the residual blind spot arise specifically from using a logit-derived confidence signal?**  
+All variants use the same ASNet backbone, training budget, curriculum, and evaluation protocol. Only the signal used for robustness modulation and abstention is changed. Clean AUC is omitted because it changed only marginally and does not bear directly on the reviewer’s concern.
+
+| Confidence / control signal | Signal type | Rob. AUC ↑ | OOD-AUROC ↑ | ECE ↓ | Misclassified caught by abstention ↑ | Residual blind spot ↓ | AUC_kept @20% ↑ | EER_kept @20% ↓ |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|
+| Logit margin | logit-derived | 0.821 | 0.683 | 0.061 | 0.70 | 0.30 | 0.898 | 0.121 |
+| Predictive entropy | logit-derived | 0.828 | 0.691 | 0.058 | 0.73 | 0.27 | 0.906 | 0.114 |
+| Mahalanobis on fused feature \(z^*\) | non-logit feature-space | 0.832 | 0.700 | 0.056 | 0.74 | 0.26 | 0.913 | 0.108 |
+| Auxiliary confidence head on \(z^*\) | non-logit learned | 0.838 | 0.706 | 0.053 | 0.76 | 0.24 | 0.921 | 0.101 |
+| Energy (ours) | logit-derived, class-symmetric | **0.857** | **0.734** | **0.041** | **0.81** | **0.19** | **0.949** | **0.079** |
+
+---
+
